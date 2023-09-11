@@ -34,7 +34,7 @@ RSpec.configure do |config|
   # В тестах на контроллеры и представления подключаем специальные
   # хелперы для авторизации с помощью девайс
   config.include Devise::Test::ControllerHelpers, type: :view
-
+  config.include Devise::Test::ControllerHelpers, type: :controller
   # Подключаем в фичах специальные хелперы для авторизации
   config.include Warden::Test::Helpers, type: :feature
 

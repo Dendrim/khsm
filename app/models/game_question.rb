@@ -19,7 +19,7 @@ class GameQuestion < ActiveRecord::Base
   # без игры и вопроса - игровой вопрос не имеет смысла
   validates :game, :question, presence: true
 
-  # в полях a,b,c,d прячутся индексы ответов из объекта :game
+  # в полях a, b, c, d прячутся индексы ответов из объекта :game
   validates :a, :b, :c, :d, inclusion: { in: 1..4 }
 
   # Автоматическая сериализация поля в базу (мы юзаем как обычный хэш,

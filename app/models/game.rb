@@ -121,7 +121,6 @@ class Game < ActiveRecord::Base
     finish_game!((previous_level > -1) ? PRIZES[previous_level] : 0, false)
   end
 
-
   # todo: дорогой ученик!
   # Код метода ниже можно сократиь в 3 раза с помощью возможностей Ruby и Rails,
   # подумайте как и реализуйте. Помните о безопасности и входных данных!
@@ -156,7 +155,7 @@ class Game < ActiveRecord::Base
     return :in_progress unless finished?
 
     if is_failed
-      # todo: дорогой ученик!
+      # TODO: дорогой ученик!
       # Если TIME_LIMIT в будущем изменится, статусы старых, уже сыгранных игр
       # могут измениться. Подумайте как это пофиксить!
       # Ответ найдете в файле настроек вашего тестового окружения
@@ -179,7 +178,6 @@ class Game < ActiveRecord::Base
   # Метод завершатель игры
   # Обновляет все нужные поля и начисляет юзеру выигрыш
   def finish_game!(amount = 0, failed = true)
-
     # оборачиваем в транзакцию - игра заканчивается
     # и баланс юзера пополняется только вместе
     transaction do
@@ -198,5 +196,4 @@ class Game < ActiveRecord::Base
     lvl = FIREPROOF_LEVELS.select { |x| x <= answered_level }.last
     lvl.present? ? PRIZES[lvl] : 0
   end
-
 end

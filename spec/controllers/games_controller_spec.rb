@@ -22,7 +22,7 @@ RSpec.describe GamesController, type: :controller do
     # из экшена show анона посылаем
     it 'kick from #show' do
       # вызываем экшен
-      get :show, id: game_w_questions.id
+      get(:show, id: game_w_questions.id)
       # проверяем ответ
       expect(response.status).not_to eq(200) # статус не 200 ОК
       expect(response).to redirect_to(new_user_session_path) # devise должен отправить на логин
