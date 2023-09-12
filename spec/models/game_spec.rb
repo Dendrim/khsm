@@ -92,7 +92,7 @@ describe Game, type: :model do
         end
 
         it 'doesnt finish game' do
-          expect(game_w_questions.finished?).to be_falsey
+          expect(game_w_questions).not_to be_finished
         end
       end
 
@@ -130,7 +130,7 @@ describe Game, type: :model do
         end
 
         it 'fails the game with correct status' do
-          expect(game_w_questions.is_failed).to be_truthy
+          expect(game_w_questions.is_failed).to be true
         end
       end
 
@@ -146,7 +146,7 @@ describe Game, type: :model do
         end
 
         it 'fails the game' do
-          expect(game_w_questions.is_failed).to be_truthy
+          expect(game_w_questions.is_failed).to be true
         end
       end
     end
@@ -164,7 +164,7 @@ describe Game, type: :model do
       end
 
       it 'correctly finishes game' do
-        expect(game_w_questions.finished?).to be_truthy
+        expect(game_w_questions).to be_finished
       end
 
       it 'correctly sets status' do
