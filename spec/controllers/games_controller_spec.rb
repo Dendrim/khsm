@@ -208,6 +208,26 @@ RSpec.describe GamesController, type: :controller do
   end
 
   describe '#answer' do
+    context 'anonymous user' do
+      before do
+        put(:answer,
+            id: game_w_questions.id,
+            letter: game_w_questions.current_game_question.correct_answer_key)
+      end
+
+      it 'returns redirect status' do
+        expect(response.status).to eq(302)
+      end
+
+      it 'redirects to sign in page' do
+        expect(response).to redirect_to(new_user_session_path)
+      end
+
+      it 'throws alert' do
+        expect(flash[:alert]).to be
+      end
+    end
+
     context 'authorized user' do
       before(:each) { sign_in user } # логиним юзера user с помощью спец. Devise метода sign_in
       let(:game) { assigns :game }
@@ -253,6 +273,24 @@ RSpec.describe GamesController, type: :controller do
         it 'throws alert' do
           expect(flash[:alert]).to be
         end
+      end
+    end
+  end
+
+  describe '#help' do
+    context 'anonymous user' do
+      before { put(:help, id: game_w_questions.id, help_type: :audience_help) }
+
+      it 'returns redirect status' do
+        expect(response.status).to eq(302)
+      end
+
+      it 'redirects to sign in page' do
+        expect(response).to redirect_to(new_user_session_path)
+      end
+
+      it 'throws alert' do
+        expect(flash[:alert]).to be
       end
     end
   end
