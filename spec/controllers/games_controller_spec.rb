@@ -3,9 +3,10 @@ require 'support/my_spec_helper'
 
 RSpec.describe GamesController, type: :controller do
   let(:user) { FactoryGirl.create(:user) }
-
   let(:admin) { FactoryGirl.create(:user, is_admin: true) }
   let(:game_w_questions) { FactoryGirl.create(:game_with_questions, user: user) }
+  let(:stranger) { FactoryGirl.create(:user) }
+  let(:stranger_game_w_questions) { FactoryGirl.create(:game_with_questions, user: stranger) }
 
   describe '#show' do
     context 'anonymous user' do
@@ -25,7 +26,7 @@ RSpec.describe GamesController, type: :controller do
     end
 
     context 'logged in user' do
-      before(:each) do
+      before do
         sign_in user
       end
 
@@ -58,8 +59,6 @@ RSpec.describe GamesController, type: :controller do
       end
 
       context 'looks at stranger game' do
-        let(:stranger) { FactoryGirl.create(:user) }
-        let(:stranger_game_w_questions) { FactoryGirl.create(:game_with_questions, user: stranger) }
         before { get :show, id: stranger_game_w_questions.id }
 
         it 'responds not to game owner' do
@@ -229,7 +228,7 @@ RSpec.describe GamesController, type: :controller do
     end
 
     context 'authorized user' do
-      before(:each) { sign_in user } # логиним юзера user с помощью спец. Devise метода sign_in
+      before { sign_in user } # логиним юзера user с помощью спец. Devise метода sign_in
       let(:game) { assigns :game }
       context 'answers correctly' do
         before do
@@ -278,19 +277,159 @@ RSpec.describe GamesController, type: :controller do
   end
 
   describe '#help' do
-    context 'anonymous user' do
-      before { put(:help, id: game_w_questions.id, help_type: :audience_help) }
+    context 'anonimous user' do
+      before { put :help, id: game_w_questions.id, help_type: :fifty_fifty }
 
-      it 'returns redirect status' do
-        expect(response.status).to eq(302)
+      it 'return status is not 200' do
+        expect(response.status).not_to eq(200)
       end
 
-      it 'redirects to sign in page' do
+      it 'redirect to authorization' do
         expect(response).to redirect_to(new_user_session_path)
+      end
+
+      it 'it must be flash alert' do
+        expect(flash[:alert]).to be
+      end
+    end
+
+    context 'authorized stranger user' do
+      before do
+        sign_in user
+
+        put(:help,
+            id: stranger_game_w_questions.id,
+            help_type: :fifty_fifty)
+      end
+
+      it 'responds not to game owner' do
+        expect(stranger_game_w_questions.user).not_to eq(user)
+      end
+
+      it 'responds with redirect status' do
+        expect(response.status).not_to eq(200)
+      end
+
+      it 'redirects to main page' do
+        expect(response).to redirect_to(root_path)
       end
 
       it 'throws alert' do
         expect(flash[:alert]).to be
+      end
+    end
+
+    context 'authorized owner user' do
+      before { sign_in game_w_questions.user }
+      let(:game) { assigns :game }
+
+      context 'using 50/50' do
+        context 'not used' do
+          context 'before use' do
+            it 'has no help used before' do
+              expect(game_w_questions.fifty_fifty_used).to be false
+            end
+
+            it 'operates with unfinished game' do
+              expect(game_w_questions).not_to be_finished
+            end
+
+            it 'has no 50/50 key' do
+              expect(game_w_questions.current_game_question.help_hash).not_to have_key(:fifty_fifty)
+            end
+          end
+
+          context 'after use' do
+            before do
+              put(:help,
+                  id: game_w_questions.id,
+                  help_type: :fifty_fifty)
+            end
+
+            it 'doesnt finish game' do
+              expect(game).not_to be_finished
+            end
+
+            it 'marks help type as used' do
+              expect(game.fifty_fifty_used).to be true
+            end
+
+            it 'fifty_fifty return 2 answers' do
+              expect(game.current_game_question.help_hash[:fifty_fifty].size).to eq(2)
+            end
+
+            it 'fifty_fifty return an array' do
+              expect(game.current_game_question.help_hash[:fifty_fifty]).to be_an(Array)
+            end
+
+            it 'contains answer key' do
+              expect(game.current_game_question.help_hash[:fifty_fifty])
+                .to include(game.current_game_question.correct_answer_key)
+            end
+
+            it 'redirects back to game' do
+              expect(response).to redirect_to(game_path(game))
+            end
+
+            it 'throws flash message' do
+              expect(flash[:info]).to be
+            end
+          end
+        end
+
+        context 'already used' do
+          before do
+            game_w_questions.update(fifty_fifty_used: true)
+          end
+
+          context 'before use' do
+            it 'operates with unfinished game' do
+              expect(game_w_questions).not_to be_finished
+            end
+
+            it 'help was used before' do
+              expect(game_w_questions.fifty_fifty_used).to be true
+            end
+          end
+
+          context 'after use' do
+            before do
+              put(:help,
+                  id: game_w_questions.id,
+                  help_type: :fifty_fifty)
+            end
+
+            it 'redirects back to game' do
+              expect(response).to redirect_to(game_path(game))
+            end
+
+            it 'throws alert' do
+              expect(flash[:alert]).to be
+            end
+          end
+        end
+
+        context 'finished game' do
+          before do
+            game_w_questions.update(finished_at: Time.now)
+
+            put(:help,
+                id: game_w_questions.id,
+                help_type: :fifty_fifty)
+          end
+
+          it 'operates with finished game' do
+            expect(game_w_questions).to be_finished
+          end
+
+          it 'redirects to user page' do
+            expect(response).to redirect_to user_path(user)
+          end
+
+          it 'throws alert' do
+            expect(flash[:alert]).to be
+          end
+        end
       end
     end
   end
@@ -298,7 +437,7 @@ RSpec.describe GamesController, type: :controller do
   # группа тестов на экшены контроллера, доступных залогиненным юзерам
   context 'Usual user' do
     # перед каждым тестом в группе
-    before(:each) { sign_in user } # логиним юзера user с помощью спец. Devise метода sign_in
+    before { sign_in user } # логиним юзера user с помощью спец. Devise метода sign_in
 
     # тест на отработку "помощи зала"
     it 'uses audience help' do
