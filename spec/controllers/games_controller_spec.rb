@@ -2,11 +2,11 @@ require 'rails_helper'
 require 'support/my_spec_helper'
 
 RSpec.describe GamesController, type: :controller do
-  let(:user) { FactoryGirl.create(:user) }
-  let(:admin) { FactoryGirl.create(:user, is_admin: true) }
-  let(:game_w_questions) { FactoryGirl.create(:game_with_questions, user: user) }
-  let(:stranger) { FactoryGirl.create(:user) }
-  let(:stranger_game_w_questions) { FactoryGirl.create(:game_with_questions, user: stranger) }
+  let(:user) { FactoryBot.create(:user) }
+  let(:admin) { FactoryBot.create(:user, is_admin: true) }
+  let(:game_w_questions) { FactoryBot.create(:game_with_questions, user: user) }
+  let(:stranger) { FactoryBot.create(:user) }
+  let(:stranger_game_w_questions) { FactoryBot.create(:game_with_questions, user: stranger) }
 
   describe '#show' do
     context 'anonymous user' do
@@ -209,9 +209,11 @@ RSpec.describe GamesController, type: :controller do
   describe '#answer' do
     context 'anonymous user' do
       before do
-        put(:answer,
-            id: game_w_questions.id,
-            letter: game_w_questions.current_game_question.correct_answer_key)
+        put(
+          :answer,
+          id: game_w_questions.id,
+          letter: game_w_questions.current_game_question.correct_answer_key
+        )
       end
 
       it 'returns redirect status' do
@@ -228,13 +230,15 @@ RSpec.describe GamesController, type: :controller do
     end
 
     context 'authorized user' do
-      before { sign_in user } # логиним юзера user с помощью спец. Devise метода sign_in
+      before { sign_in user }
       let(:game) { assigns :game }
       context 'answers correctly' do
         before do
-          put(:answer,
-              id: game_w_questions.id,
-              letter: game_w_questions.current_game_question.correct_answer_key)
+          put(
+            :answer,
+            id: game_w_questions.id,
+            letter: game_w_questions.current_game_question.correct_answer_key
+          )
         end
 
         it 'operates with game in progress' do
@@ -250,15 +254,17 @@ RSpec.describe GamesController, type: :controller do
         end
 
         it 'doesnt throw any messages' do
-          expect(flash.empty?).to be_truthy # удачный ответ не заполняет flash
+          expect(flash.empty?).to be true
         end
       end
 
       context 'answers incorrectly' do
         before do
-          put(:answer,
-              id: game_w_questions.id,
-              letter: 'c')
+          put(
+            :answer,
+            id: game_w_questions.id,
+            letter: 'c'
+          )
         end
 
         it 'finishes game' do
@@ -297,9 +303,11 @@ RSpec.describe GamesController, type: :controller do
       before do
         sign_in user
 
-        put(:help,
-            id: stranger_game_w_questions.id,
-            help_type: :fifty_fifty)
+        put(
+          :help,
+          id: stranger_game_w_questions.id,
+          help_type: :fifty_fifty
+        )
       end
 
       it 'responds not to game owner' do
@@ -341,9 +349,11 @@ RSpec.describe GamesController, type: :controller do
 
           context 'after use' do
             before do
-              put(:help,
-                  id: game_w_questions.id,
-                  help_type: :fifty_fifty)
+              put(
+                :help,
+                id: game_w_questions.id,
+                help_type: :fifty_fifty
+              )
             end
 
             it 'doesnt finish game' do
@@ -394,9 +404,11 @@ RSpec.describe GamesController, type: :controller do
 
           context 'after use' do
             before do
-              put(:help,
-                  id: game_w_questions.id,
-                  help_type: :fifty_fifty)
+              put(
+                :help,
+                id: game_w_questions.id,
+                help_type: :fifty_fifty
+              )
             end
 
             it 'redirects back to game' do
@@ -413,9 +425,11 @@ RSpec.describe GamesController, type: :controller do
           before do
             game_w_questions.update(finished_at: Time.now)
 
-            put(:help,
-                id: game_w_questions.id,
-                help_type: :fifty_fifty)
+            put(
+              :help,
+              id: game_w_questions.id,
+              help_type: :fifty_fifty
+            )
           end
 
           it 'operates with finished game' do
@@ -443,15 +457,15 @@ RSpec.describe GamesController, type: :controller do
     it 'uses audience help' do
       # сперва проверяем что в подсказках текущего вопроса пусто
       expect(game_w_questions.current_game_question.help_hash[:audience_help]).not_to be
-      expect(game_w_questions.audience_help_used).to be_falsey
+      expect(game_w_questions.audience_help_used).to be false
 
       # фигачим запрос в контроллен с нужным типом
       put :help, id: game_w_questions.id, help_type: :audience_help
       game = assigns(:game)
 
       # проверяем, что игра не закончилась, что флажок установился, и подсказка записалась
-      expect(game.finished?).to be_falsey
-      expect(game.audience_help_used).to be_truthy
+      expect(game.finished?).to be false
+      expect(game.audience_help_used).to be true
       expect(game.current_game_question.help_hash[:audience_help]).to be
       expect(game.current_game_question.help_hash[:audience_help].keys).to contain_exactly('a', 'b', 'c', 'd')
       expect(response).to redirect_to(game_path(game))

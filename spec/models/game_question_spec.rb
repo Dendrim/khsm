@@ -1,11 +1,11 @@
 require 'rails_helper'
 
 describe GameQuestion, type: :model do
-  let(:game_question) { FactoryGirl.create(:game_question, a: 2, b: 1, c: 4, d: 3) }
+  let(:game_question) { FactoryBot.create(:game_question, a: 2, b: 1, c: 4, d: 3) }
 
   describe '#answer_correct?' do
     it 'correctly detects if answer is right' do
-      expect(game_question.answer_correct?('b')).to be_truthy
+      expect(game_question.answer_correct?('b')).to be true
     end
   end
 
@@ -42,12 +42,12 @@ describe GameQuestion, type: :model do
       end
 
       it 'saves new keys normally' do
-        expect(game_question.save).to be_truthy
+        expect(game_question.save).to be true
       end
 
       it 'correctly returns new hash' do
         game_question.save
-        expect(game_question.help_hash).to eq({ some_key1: 'blabla1', 'some_key2' => 'blabla2' })
+        expect(game_question.help_hash).to eq({ :some_key1 => 'blabla1', 'some_key2' => 'blabla2' })
       end
     end
   end

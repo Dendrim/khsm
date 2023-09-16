@@ -2,9 +2,9 @@ require 'rails_helper'
 require 'support/my_spec_helper'
 
 describe Game, type: :model do
-  let(:user) { FactoryGirl.create(:user) }
+  let(:user) { FactoryBot.create(:user) }
 
-  let(:game_w_questions) { FactoryGirl.create(:game_with_questions, user: user) }
+  let(:game_w_questions) { FactoryBot.create(:game_with_questions, user: user) }
 
   describe 'Game Factory' do
     it 'correctly creates new game' do
@@ -12,9 +12,7 @@ describe Game, type: :model do
 
       game = nil
       expect { game = Game.create_game_for_user!(user) }
-        .to change(Game, :count).by(1).and(
-        change(GameQuestion, :count).by(15)
-      )
+        .to change(Game, :count).by(1).and(change(GameQuestion, :count).by(15))
 
       expect(game.user).to eq(user)
       expect(game.status).to eq(:in_progress)
