@@ -31,7 +31,7 @@ describe 'users/show.html.erb', type: :view do
       render
     end
 
-    it 'renders password/name link' do
+    it 'renders password/name reset link' do
       expect(rendered).to match 'Сменить имя и пароль'
     end
   end
